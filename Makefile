@@ -13,7 +13,7 @@ change_version:
 
 ## Build the docker image
 build: fresh
-	export DOCKER_BUILDKIT=0
+	export DOCKER_BUILDKIT=1
 	bash -c "docker compose --progress plain build"
 	bash -c "VERSION_HASH=\"-latest\" docker compose --progress plain build"
 	@printf "\n--> Build was done:\n\
@@ -26,7 +26,7 @@ publish: build test
 			\t ${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}\n\
 			\t ${IMAGE_NAME}:${IMAGE_VERSION}-latest\n"
 test:
-	bash -c "docker run -it --rm --name ${IMAGE_NAME}-${IMAGE_VERSION}-${NEW_VERSION_HASH} ${DOCKER_REGISTRY_WORKSTATION}${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}  bash -v"
+	bash -c "docker run -it --rm --name ${IMAGE_NAME}-${IMAGE_VERSION}-${NEW_VERSION_HASH} ${DOCKER_REGISTRY_WORKSTATION}${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}  bash"
 	@printf "\n--> Test was done:\n\
 			\t${DOCKER_REGISTRY_WORKSTATION}${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}\n"
 

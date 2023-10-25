@@ -1,7 +1,8 @@
 version: "3.8"
 
 x-build-ags: &default-build-ags
-  DOCKER_BUILD_DEBUG_VERBOSE: "${DOCKER_BUILD_DEBUG_VERBOSE}"
+  DOCKER_BUILD_DEBUG_VERBOSE: ${DOCKER_BUILD_DEBUG_VERBOSE}
+  IMAGE_VERSION: ${IMAGE_VERSION}
 
 x-centos: &default-centos-image
   build:
