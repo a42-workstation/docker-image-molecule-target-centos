@@ -12,6 +12,7 @@ ENV pip_packages ""
 # Install dependencies.
 RUN yum -y update \
     && yum -y install python3 python3-pip \
+    && pip install --upgrade pip \
     && if [ ! -z $pip_packages ]; then pip3 install $pip_packages; fi \
     && yum clean all
 
