@@ -2,20 +2,37 @@
 # @description
 
 ARG IMAGE_VERSION="latest"
+ARG IMAGE_STAGE="ubuntu"
 
-FROM quay.io/centos/centos:$IMAGE_VERSION
+FROM quay.io/centos/centos:$IMAGE_VERSION as centos
 LABEL maintainer="George Babarus"
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-ENV pip_packages "ansible"
+ENV pip_packages ""
 
 # Install dependencies.
-RUN yum -y update && \
-    yum -y install python3 python3-pip && \
-    yum clean all
+RUN yum -y update \
+    && yum -y install python3 python3-pip \
+    && if [ ! -z $pip_packages ]; then pip3 install $pip_packages; fi \
+    && yum clean all
 
-
-RUN pip3 install $pip_packages
+COPY bin/* /usr/local/bin/
 
 CMD ["/usr/sbin/init"]
+
+
+FROM centos as centos_with_user
+
+ARG APP_USER
+ARG APP_USER_ID
+ARG APP_GROUP
+ARG APP_GROUP_ID
+ARG APP_USER_HOME
+
+RUN docker-users-create
+
+USER $APP_USER_ID:$APP_GROUP_ID
+
+# Set working directory
+WORKDIR $APP_USER_HOME/$APP_USER
+
+FROM $IMAGE_STAGE as centos_final

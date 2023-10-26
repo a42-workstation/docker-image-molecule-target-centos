@@ -1,27 +1,33 @@
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
-ENV_FILE := $(PWD)/.env
-NEW_VERSION_HASH := $(shell cat .env | grep -v VERSION_HASH | md5sum | cut -f1 -d" " | head -c 5)
+ENV_FILE := $(PWD)/env/.env
+$(shell touch "${ENV_FILE}")
+FLEX_CLI_EXEC := $(shell which flex-cli)
 
-include ${ENV_FILE}
+NEW_VERSION_HASH := $(shell cat ${ENV_FILE} | grep -v VERSION_HASH | md5sum | cut -f1 -d" " | head -c 5)
+
+ifneq (,$(wildcard ${ENV_FILE}))
+    include ${ENV_FILE}
+    export
+endif
 
 ## Compute the version hash
 change_version:
-	$(shell sed -i -e "s/VERSION_HASH=.*/VERSION_HASH=\"-${NEW_VERSION_HASH}\"/g" .env)
+	$(eval NEW_VERSION_HASH := $(shell cat ${ENV_FILE} | grep -v VERSION_HASH | md5sum | cut -f1 -d" " | head -c 5))
+	$(shell sed -i -e "s/VERSION_HASH=.*/VERSION_HASH=\"-${NEW_VERSION_HASH}\"/g" ${ENV_FILE})
 	@printf "New version: ${NEW_VERSION_HASH}\n"
 	@printf "Change version was done.\n"
 
 ## Build the docker image
 build: fresh
-	export DOCKER_BUILDKIT=1
-	bash -c "docker compose --progress plain build"
-	bash -c "VERSION_HASH=\"-latest\" docker compose --progress plain build"
+	bash -c ". ${ENV_FILE} && docker compose --progress plain build"
+	bash -c ". ${ENV_FILE} && VERSION_HASH=\"-latest\" docker compose --progress plain build"
 	@printf "\n--> Build was done:\n\
 			\t${DOCKER_REGISTRY_WORKSTATION}${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}\n"
 
 publish: build test
-	bash -c "docker compose push"
-	bash -c "VERSION_HASH=\"-latest\" docker compose push"
+	bash -c ". ${ENV_FILE} && docker compose push"
+	bash -c ". ${ENV_FILE} && VERSION_HASH=\"-latest\" docker compose push"
 	@printf "\n--> Build was pushed to repository ${DOCKER_REGISTRY_WORKSTATION}:\n\
 			\t ${IMAGE_NAME}:${IMAGE_VERSION}-${NEW_VERSION_HASH}\n\
 			\t ${IMAGE_NAME}:${IMAGE_VERSION}-latest\n"
@@ -38,7 +44,10 @@ fresh: clean init change_version
 
 ## Init env variables for a fresh environment
 init:
-	cp .env.sample .env
+	cp "${ENV_FILE}.template" "${ENV_FILE}"
+	@if [ ! -z "${FLEX_CLI_EXEC}" ]; then\
+		FLEX_RELOAD_FLAG=1 ${FLEX_CLI_EXEC} -handler flex/bash/emulator "exit 0"; \
+	fi
 
 ## Clean this repository of ignored files
 ##

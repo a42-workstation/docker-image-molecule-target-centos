@@ -2,8 +2,13 @@ version: "3.8"
 
 x-build-ags: &default-build-ags
   DOCKER_BUILD_DEBUG_VERBOSE: ${DOCKER_BUILD_DEBUG_VERBOSE}
+  IMAGE_STAGE: ${IMAGE_STAGE}
   IMAGE_VERSION: ${IMAGE_VERSION}
-
+  APP_USER_HOME: ${APP_USER_HOME}
+  APP_USER: ${APP_USER}
+  APP_USER_ID: ${APP_USER_ID}
+  APP_GROUP: ${APP_GROUP}
+  APP_GROUP_ID: ${APP_GROUP_ID}
 x-centos: &default-centos-image
   build:
     args:
